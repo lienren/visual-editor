@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Visual Editor</title>
+    <link rel="stylesheet" href="css/comm.css"> </head>
+
+<body>
+    <div class="code-box">
+        <div class="left">
+            <div id="container" style="width:100%;height:100%;"></div>
+        </div>
+        <div class="right">
+            <iframe id="ifm-preview" frameborder="0" marginwidth="0" marginheight="0" style="width:375px;height:667px;border:1px solid #ccc;"></iframe>
+        </div>
+    </div>
+</body>
+<script>
+    // Monaco uses a custom amd loader that over-rides node's require.
+    // Keep a reference to node's require so we can restore it after executing the amd loader file.
+    var nodeRequire = global.require;
+</script>
+<script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+<script>
+    // Save Monaco's amd require and restore Node's require
+    var amdRequire = global.require;
+    global.require = nodeRequire;
+</script>
+<script>
+    var _ = require('lodash');
+    var fs = require('fs');
+    var path = require('path');
+    var utils = {
+        uriFromPath: (_path) => {
+            var pathName = path.resolve(_path).replace(/\\/g, '/');
+            if (pathName.length > 0 && pathName.charAt(0) !== '/') {
+                pathName = '/' + pathName;
+            }
+            return encodeURI('file://' + pathName);
+        },
+        getFilePreExt: (url) => {
+            var arr = url.split('.');
+            var len = arr.length;
+            return {
+                pre: arr[0],
+                ext: arr[len - 1]
+            }
+        }
+    }
+    var codebox = {
+        getTemplates: (_path) => {
+            var templateFiles = [];
+            var files = fs.readdirSync(templateFilePath);
+            _.each(files, filename => {
+                var stats = fs.statSync(path.join(templateFilePath, filename));
+                if (stats.isFile()) {
+                    let file_pre_ext = utils.getFilePreExt(filename);
+                    if (file_pre_ext.ext === 'txt') {
+                        templateFiles.push({
+                            pre: file_pre_ext.pre,
+                            ext: file_pre_ext.ext,
+                            filename: filename,
+                            filepath: path.join(templateFilePath, filename),
+                            filecontext: []
+                        })
+                        var data = fs.readFileSync(templateFiles[templateFiles.length - 1].filepath,
+                            'utf-8');
+                        if (data) {
+                            templateFiles[templateFiles.length - 1].filecontext = data.split(/\r?\n/ig);
+                        }
+                    }
+                }
+            });
+            return templateFiles;
+        },
+        view: (htmlcode) => {
+            let ifmpreview = document.getElementById('ifm-preview');
+            let blob = new Blob([htmlcode], {
+                'type': 'text/html'
+            });
+            ifmpreview.src = URL.createObjectURL(blob);
+        }
+    }
+    var templateFilePath = path.join(__dirname, './templates/');
+    var templateFiles = codebox.getTemplates(templateFilePath);
+    amdRequire.config({
+        baseUrl: utils.uriFromPath(path.join(__dirname, '../node_modules/monaco-editor/min'))
+    });
+    // workaround monaco-css not understanding the environment
+    self.module = undefined;
+    // workaround monaco-typescript not understanding the environment
+    self.process.browser = true;
+    amdRequire(['vs/editor/editor.main'], function () {
+        monaco.editor.setTheme('vs-dark');
+        var modelText = templateFiles[0].filecontext.join('\n');
+        var modelLang = templateFiles[0].pre;
+        var model = monaco.editor.createModel(modelText, modelLang);
+        var editor = monaco.editor.create(document.getElementById('container'), {
+            model: model,
+            minimap: {
+                enabled: false
+            }
+        });
+        codebox.view(modelText);
+        editor.onKeyUp((e) => {
+            let htmlCode = e.target.value;
+            codebox.view(htmlCode)
+        });
+        window.onresize = () => {
+            editor.layout();
+        };
+    });
+</script>
+
+</html>
