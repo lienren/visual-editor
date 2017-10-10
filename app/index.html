@@ -5,17 +5,23 @@
     <meta charset="UTF-8">
     <title>Visual Editor</title>
     <link rel="shortcut icon" href="favicon.ico">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui@next/lib/theme-chalk/index.css">
     <link rel="stylesheet" href="css/comm.css">
 </head>
 
 <body>
-    <div class="code-box">
+    <div id="app" class="code-box">
         <div class="left">
             <div id="container" style="width:100%;height:100%;"></div>
         </div>
         <div class="right">
             <iframe id="ifm-preview" frameborder="0" marginwidth="0" marginheight="0" style="width:375px;height:667px;border:1px solid #ccc;"></iframe>
+            <el-button @click="visible = true">刷新</el-button>
         </div>
+        <el-dialog :visible.sync="visible" title="Hello world">
+            <p>欢迎使用 Element</p>
+        </el-dialog>
     </div>
 </body>
 <script>
@@ -93,26 +99,44 @@
     self.module = undefined;
     // workaround monaco-typescript not understanding the environment
     self.process.browser = true;
+    var modelText = templateFiles[0].filecontext.join('\n');
+    var modelLang = templateFiles[0].pre;
     amdRequire(['vs/editor/editor.main'], function () {
         monaco.editor.setTheme('vs-dark');
-        var modelText = templateFiles[0].filecontext.join('\n');
-        var modelLang = templateFiles[0].pre;
         var model = monaco.editor.createModel(modelText, modelLang);
         var editor = monaco.editor.create(document.getElementById('container'), {
             model: model,
+            wrappingColumn: 0,
+            wrappingIndent: "indent",
             minimap: {
                 enabled: false
             }
         });
         codebox.view(modelText);
         editor.onKeyUp((e) => {
-            let htmlCode = e.target.value;
-            codebox.view(htmlCode)
+            if (e.keyCode >= 21 && e.keyCode <= 56) {
+                modelText = editor.getValue();
+                codebox.view(modelText)
+            }
         });
         window.onresize = () => {
             editor.layout();
         };
     });
+</script>
+<!-- 先引入 Vue -->
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui@next/lib/index.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                visible: false
+            }
+        }
+    })
 </script>
 
 </html>

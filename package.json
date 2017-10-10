@@ -7,12 +7,14 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "packager-mac": "electron-packager . mydemo --Mac --out ./outapp --version 0.0.1 --overwrite --icns=app/img/icon/icon.ico  --ignore='(dist|electron-packager|.gitignore|attach)' --asar true",
-    "packager-win": "electron-packager . mydemo --platform=win32 --arch=x64 --out ./outapp --version 0.0.1 --overwrite --icon=app/img/icon/icon.ico  --ignore='(dist|electron-packager|.gitignore|attach)' --asar true"
+    "packager-mac": "electron-packager . mydemo --Mac --out ./outapp --version 0.0.1 --overwrite --icon=app/img/icon/icon.icns  --ignore='(dist|electron-packager|.gitignore|attach)'",
+    "packager-win": "electron-packager . mydemo --platform=win32 --arch=x64 --out ./outapp --version 0.0.1 --overwrite --icon=app/img/icon/icon.ico  --ignore='(dist|electron-packager|.gitignore|attach)'"
+  },
+  "devDependencies": {
+    "electron-packager": "^9.1.0",
+    "electron-prebuilt": "^1.4.13"
   },
   "dependencies": {
-    "electron-packager": "^9.1.0",
-    "electron-prebuilt": "^1.4.13",
     "monaco-editor": "^0.10.0",
     "nconf": "^0.7.2",
     "lodash": "^4.17.4"
