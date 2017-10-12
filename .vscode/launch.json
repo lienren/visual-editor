@@ -1,0 +1,11 @@
+{
+    "version": "2.0.0",
+    "configurations": [{
+        "type": "node",
+        "request": "launch",
+        "name": "debug",
+        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+        "program": "${workspaceFolder}/main.js",
+        "protocol": "legacy"
+    }]
+}
